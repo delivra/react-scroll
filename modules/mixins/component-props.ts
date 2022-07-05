@@ -57,7 +57,10 @@ export interface ReactScrollProps {
    */
   isDynamic?: boolean;
   
-  onClick?: (e: Event) => void;
+  /**
+   * Invoked whenever link is clicked
+   */
+  onClick?: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
 
   /**
    * time of the scroll animation - can be a number or a function (`function (scrollDistanceInPx) { return duration; }`), that allows more granular control at run-time
@@ -96,7 +99,13 @@ export interface ReactScrollProps {
   spyThrottle?: number;
 }
 
-export type ReactScrollLinkProps = {
+export type ReactScrollLinkProps = {  
+  className?: string;
+  children?: React.ReactNode;
+  onClick: React.MouseEventHandler<HTMLElement>;
+};
+
+export type ReactScrollElementProps = {
   parentBindings: {
     domNode: HTMLElement;
   }

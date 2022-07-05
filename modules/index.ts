@@ -7,9 +7,7 @@ import  scrollSpy  from './mixins/scroll-spy.js';
 import  animateScroll  from './mixins/animate-scroll.js';
 import  ScrollLink  from './mixins/scroll-link.js';
 import  ScrollElement  from './mixins/scroll-element.js';
-import  Helpers  from './mixins/Helpers.js';
 
+export { Link, Button, Element, scroller, Events, scrollSpy, animateScroll, ScrollLink, ScrollElement }
 
-export { Link, Button, Element, scroller, Events, scrollSpy, animateScroll, ScrollLink, ScrollElement, Helpers }
-
-export default { Link, Button, Element, scroller, Events, scrollSpy, animateScroll, ScrollLink, ScrollElement, Helpers }
+export default { Link, Button, Element, scroller, Events, scrollSpy, animateScroll, ScrollLink, ScrollElement }

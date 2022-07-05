@@ -3,7 +3,7 @@ import * as React from 'react';
 import scrollSpy from './scroll-spy';
 import defaultScroller, { Scroller } from './scroller';
 import scrollHash from './scroll-hash';
-import { ReactScrollProps } from './component-props';
+import { ReactScrollLinkProps, ReactScrollProps } from './component-props';
 import { isDocument } from './utils';
 
 type LinkState = {
@@ -11,8 +11,7 @@ type LinkState = {
   container: HTMLElement | Document | undefined
 };
 
-export default (Component: React.ComponentType<any>, customScroller: Scroller) => {
-
+export default (Component: React.ComponentType<ReactScrollLinkProps>, customScroller: Scroller) => {
   const scroller = customScroller || defaultScroller;
 
   class Link extends React.PureComponent<ReactScrollProps, LinkState> {
@@ -25,12 +24,10 @@ export default (Component: React.ComponentType<any>, customScroller: Scroller) =
       scroller.scrollTo(to, Object.assign({}, this.state, props));
     }
 
-    handleClick = (event: Event) => {
-
+    handleClick = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
       /*
        * give the posibility to override onClick
        */
-
       if (this.props.onClick) {
         this.props.onClick(event);
       }
@@ -38,7 +35,6 @@ export default (Component: React.ComponentType<any>, customScroller: Scroller) =
       /*
        * dont bubble the navigation
        */
-
       if (event.stopPropagation) event.stopPropagation();
       if (event.preventDefault) event.preventDefault();
 
@@ -189,11 +185,12 @@ export default (Component: React.ComponentType<any>, customScroller: Scroller) =
         className = this.props.className ?? '';
       }
 
-      let props = {} as any;
-      props.className = className;
-      props.onClick = this.handleClick;
-      props.children = this.props.children;
-
+      const props : ReactScrollLinkProps = {
+        className: className,
+        onClick: this.handleClick,
+        children: this.props.children
+      };
+      
       return React.createElement(Component, props);
     }
   };

@@ -1,4 +1,4 @@
-import utils, {isDocument} from './utils';
+import { isDocument } from './utils';
 import smooth from './smooth';
 import cancelEvents from './cancel-events';
 import events from './scroll-events';
