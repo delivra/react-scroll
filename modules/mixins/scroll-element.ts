@@ -1,26 +1,30 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
 import scroller from './scroller';
-import PropTypes from 'prop-types';
 
+type ComponentProps = {
+  name: string;
+  id:   string;
+};
 
-export default (Component) => {
-    class Element extends React.Component{
+type ElementWrapperProps = {
+  parentBindings: {
+    domNode: HTMLElement;
+  }
+} & React.HTMLProps<HTMLDivElement>;
 
-      constructor (props){
-        super(props);
-        this.childBindings = {
-          domNode: null
-        };
+export default (Component:React.ComponentType<any>) => {
+    class Element extends React.Component<ComponentProps>{
+      childBindings = {
+        domNode: null as HTMLElement | null
       }
-
+      
       componentDidMount() {
         if (typeof window === 'undefined') {
           return false;
         }
         this.registerElems(this.props.name);
       }
-      componentDidUpdate(prevProps) {
+      componentDidUpdate(prevProps: ComponentProps) {
         if (this.props.name !== prevProps.name) {
           this.registerElems(this.props.name);
         }
@@ -31,18 +35,12 @@ export default (Component) => {
         }
         scroller.unregister(this.props.name);
       }
-      registerElems(name) {
-        scroller.register(name, this.childBindings.domNode);
+      registerElems(name: string) {
+        this.childBindings.domNode && scroller.register(name, this.childBindings.domNode);
       }
       render() {
-        return React.createElement(Component, Object.assign({}, this.props, { parentBindings: this.childBindings }));
+        return React.createElement(Component, {...this.props, ...{ parentBindings: this.childBindings }});
       }
     };
-
-    Element.propTypes = {
-        name: PropTypes.string,
-        id:   PropTypes.string
-    }
-
     return Element;
   }

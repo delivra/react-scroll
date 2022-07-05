@@ -3,13 +3,12 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import Rtu from 'react-dom/test-utils'
 import React from 'react'
 /* Components to test */
-import Element from '../components/Element.js';
-import Link from '../components/Link.js';
-import events from '../mixins/scroll-events.js';
-import animateScroll from '../mixins/animate-scroll.js';
+import Element from '../components/Element';
+import Link from '../components/Link';
+import events from '../mixins/scroll-events';
+import animateScroll from '../mixins/animate-scroll';
 /* Test */
-import expect from 'expect'
-import assert from 'assert';
+import expect from 'expect';
 
 import { renderHorizontal } from './utility'
 

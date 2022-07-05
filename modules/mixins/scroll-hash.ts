@@ -1,13 +1,14 @@
 import { addPassiveEventListener } from './passive-event-listeners';
+import { Scroller } from './scroller';
 import utils from './utils';
 
 const scrollHash = {
   mountFlag: false,
   initialized: false,
-  scroller: null,
-  containers: {},
+  scroller: null as Scroller | null,
+  containers: {} as Record<string, HTMLElement | Document>,
 
-  mount(scroller) {
+  mount(scroller : Scroller) {
     this.scroller = scroller;
 
     this.handleHashChange = this.handleHashChange.bind(this);
@@ -17,7 +18,7 @@ const scrollHash = {
     this.mountFlag = true;
   },
 
-  mapContainer(to, container) {
+  mapContainer(to: string, container: HTMLElement | Document) {
     this.containers[to] = container;
   },
 
@@ -41,12 +42,14 @@ const scrollHash = {
     }
   },
 
-  scrollTo(to, isInit) {
+  scrollTo(to: string, isInit?: boolean) {
     let scroller = this.scroller;
-    let element = scroller.get(to);
-    if (element && (isInit || to !== scroller.getActiveLink())) {
-      let container = this.containers[to] || document;
-      scroller.scrollTo(to, { container });
+    if (scroller) {
+      let element = scroller.get(to);
+      if (element && (isInit || to !== scroller.getActiveLink())) {
+        let container = this.containers[to] || document;
+        scroller.scrollTo(to, { to, container });
+      }
     }
   },
 
@@ -54,7 +57,7 @@ const scrollHash = {
     return utils.getHash();
   },
 
-  changeHash(to, saveHashHistory) {
+  changeHash(to?: string, saveHashHistory?: boolean) {
     if (this.isInitialized() && utils.getHash() !== to) {
       utils.updateHash(to, saveHashHistory);
     }
@@ -66,7 +69,7 @@ const scrollHash = {
 
   unmount() {
     this.scroller = null;
-    this.containers = null;
+    this.containers = {};
     window.removeEventListener('hashchange', this.handleHashChange);
   },
 };

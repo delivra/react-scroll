@@ -1,36 +1,45 @@
-import utils from './utils';
+import utils, {isDocument} from './utils';
 import smooth from './smooth';
 import cancelEvents from './cancel-events';
 import events from './scroll-events';
+import { ReactScrollProps } from './component-props';
 
-/*
+/**
  * Gets the easing type from the smooth prop within options.
  */
-const getAnimationType = (options) => smooth[options.smooth] || smooth.defaultEasing;
-/*
+const getAnimationType = (options : ReactScrollProps) => typeof options.smooth === 'string' && smooth[options.smooth] || smooth.defaultEasing;
+
+/**
  * Function helper
  */
-const functionWrapper = (value) => typeof value === 'function' ? value : function () { return value; };
-/*
+const functionWrapper = (value : number | ((x: number) => number)) => typeof value === 'function' ? value :  (function () { return value; });
+
+/**
  * Wraps window properties to allow server side rendering
  */
 const currentWindowProperties = () => {
   if (typeof window !== 'undefined') {
-    return window.requestAnimationFrame || window.webkitRequestAnimationFrame;
+    if (window.requestAnimationFrame) {
+      return window.requestAnimationFrame;
+    }
+    if ((window as any).webkitRequestAnimationFrame) {
+      return (window as any).webkitRequestAnimationFrame as (callback: FrameRequestCallback) => number;
+    }
   }
 };
 
-/*
+/**
  * Helper function to never extend 60fps on the webpage.
  */
 const requestAnimationFrameHelper = (() => {
-  return currentWindowProperties() ||
-    function (callback, element, delay) {
+  return currentWindowProperties() ??
+    function (callback: TimerHandler) {
+      const delay = undefined;
       window.setTimeout(callback, delay || (1000 / 60), new Date().getTime());
     };
 })();
 
-const makeData = () => ({
+const defaultData = {
   currentPosition: 0,
   startPosition: 0,
   targetPosition: 0,
@@ -38,18 +47,24 @@ const makeData = () => ({
   duration: 0,
   cancel: false,
 
-  target: null,
-  containerElement: null,
-  to: null,
-  start: null,
-  delta: null,
-  percent: null,
-  delayTimeout: null
-});
+  target: undefined as HTMLElement | Document | undefined,
+  containerElement: undefined as HTMLElement | Document | undefined,
+  to: undefined as string | undefined,
+  start: undefined as number | undefined,
+  delta: undefined as number | undefined,
+  percent: undefined as number | undefined,
+  delayTimeout: undefined as number | undefined
+};
 
-const currentPositionX = (options) => {
+type OptionsType = ReactScrollProps & {
+  data: typeof defaultData;
+}
+
+const makeData = () => ({...defaultData});
+
+const currentPositionX = (options: OptionsType) => {
   const containerElement = options.data.containerElement;
-  if (containerElement && containerElement !== document && containerElement !== document.body) {
+  if (containerElement && !isDocument(containerElement) && containerElement !== document.body) {
     return containerElement.scrollLeft;
   } else {
     var supportPageOffset = window.pageXOffset !== undefined;
@@ -59,9 +74,9 @@ const currentPositionX = (options) => {
   }
 };
 
-const currentPositionY = (options) => {
+const currentPositionY = (options: OptionsType) => {
   const containerElement = options.data.containerElement;
-  if (containerElement && containerElement !== document && containerElement !== document.body) {
+  if (containerElement && !isDocument(containerElement) && containerElement !== document.body) {
     return containerElement.scrollTop;
   } else {
     var supportPageOffset = window.pageXOffset !== undefined;
@@ -71,9 +86,9 @@ const currentPositionY = (options) => {
   }
 };
 
-const scrollContainerWidth = (options) => {
+const scrollContainerWidth = (options: OptionsType) => {
   const containerElement = options.data.containerElement;
-  if (containerElement && containerElement !== document && containerElement !== document.body) {
+  if (containerElement && !isDocument(containerElement) && containerElement !== document.body) {
     return containerElement.scrollWidth - containerElement.offsetWidth;
   } else {
     let body = document.body;
@@ -89,9 +104,9 @@ const scrollContainerWidth = (options) => {
   }
 };
 
-const scrollContainerHeight = (options) => {
+const scrollContainerHeight = (options: OptionsType) => {
   const containerElement = options.data.containerElement;
-  if (containerElement && containerElement !== document && containerElement !== document.body) {
+  if (containerElement && !isDocument(containerElement) && containerElement !== document.body) {
     return containerElement.scrollHeight - containerElement.offsetHeight;
   } else {
     let body = document.body;
@@ -107,20 +122,20 @@ const scrollContainerHeight = (options) => {
   }
 };
 
-const animateScroll = (easing, options, timestamp) => {
+const animateScroll = (easing: (x: number) => number, options: OptionsType, timestamp: number) => {
   const data = options.data;
 
   // Cancel on specific events
   if (!options.ignoreCancelEvents && data.cancel) {
     if (events.registered['end']) {
-      events.registered['end'](data.to, data.target, data.currentPositionY);
+      events.registered['end'](data.to, data.target, data.currentPosition);
     }
     return
   };
 
   data.delta = Math.round(data.targetPosition - data.startPosition);
 
-  if (data.start === null) {
+  if (data.start === undefined) {
     data.start = timestamp;
   }
 
@@ -130,7 +145,7 @@ const animateScroll = (easing, options, timestamp) => {
 
   data.currentPosition = data.startPosition + Math.ceil(data.delta * data.percent);
 
-  if (data.containerElement && data.containerElement !== document && data.containerElement !== document.body) {
+  if (data.containerElement && !isDocument(data.containerElement) && data.containerElement !== document.body) {
     if (options.horizontal) {
       data.containerElement.scrollLeft = data.currentPosition;
     } else {
@@ -146,7 +161,7 @@ const animateScroll = (easing, options, timestamp) => {
 
   if (data.percent < 1) {
     let easedAnimate = animateScroll.bind(null, easing, options);
-    requestAnimationFrameHelper.call(window, easedAnimate);
+    requestAnimationFrameHelper(easedAnimate);
     return;
   }
 
@@ -156,18 +171,18 @@ const animateScroll = (easing, options, timestamp) => {
 
 };
 
-const setContainer = (options) => {
-  options.data.containerElement = !options
-    ? null
+const setContainer = (options: OptionsType) => {
+  options.data.containerElement = (!options
+    ? undefined
     : options.containerId
       ? document.getElementById(options.containerId)
       : options.container && options.container.nodeType
         ? options.container
-        : document;
+        : document) ?? undefined;
 };
 
-const animateTopScroll = (scrollOffset, options, to, target) => {
-  options.data = options.data || makeData();
+const animateTopScroll = (scrollOffset: number, inputOptions: ReactScrollProps, to?: string, target?: HTMLElement | Document) => {
+  const options = proceedOptions({...inputOptions, ...{data:undefined}});
 
   window.clearTimeout(options.data.delayTimeout);
 
@@ -177,7 +192,7 @@ const animateTopScroll = (scrollOffset, options, to, target) => {
 
   setContainer(options);
 
-  options.data.start = null;
+  options.data.start = undefined;
   options.data.cancel = false;
   options.data.startPosition = options.horizontal ? currentPositionX(options) : currentPositionY(options);
   options.data.targetPosition = options.absolute
@@ -193,20 +208,20 @@ const animateTopScroll = (scrollOffset, options, to, target) => {
 
   options.data.delta = Math.round(options.data.targetPosition - options.data.startPosition);
 
-  options.data.duration = functionWrapper(options.duration)(options.data.delta);
-  options.data.duration = isNaN(parseFloat(options.data.duration)) ? 1000 : parseFloat(options.data.duration);
+  options.data.duration = functionWrapper(options.duration ?? 0)(options.data.delta);
+  options.data.duration = isNaN(options.data.duration) ? 1000 : options.data.duration;
   options.data.to = to;
   options.data.target = target;
 
   let easing = getAnimationType(options);
   let easedAnimate = animateScroll.bind(null, easing, options);
 
-  if (options && options.delay > 0) {
+  if (options && options.delay && options.delay > 0) {
     options.data.delayTimeout = window.setTimeout(() => {
       if (events.registered['begin']) {
         events.registered['begin'](options.data.to, options.data.target);
       }
-      requestAnimationFrameHelper.call(window, easedAnimate);
+      requestAnimationFrameHelper(easedAnimate);
     }, options.delay);
     return;
   }
@@ -214,26 +229,26 @@ const animateTopScroll = (scrollOffset, options, to, target) => {
   if (events.registered['begin']) {
     events.registered['begin'](options.data.to, options.data.target);
   }
-  requestAnimationFrameHelper.call(window, easedAnimate);
+  requestAnimationFrameHelper(easedAnimate);
 
 };
 
-const proceedOptions = (options) => {
-  options = Object.assign({}, options);
+const proceedOptions = (inputOptions: ReactScrollProps & { data: typeof defaultData | undefined}) => {
+  const options = {...inputOptions};
   options.data = options.data || makeData();
   options.absolute = true;
-  return options;
+  return options as OptionsType;
 }
 
-const scrollToTop = (options) => {
+const scrollToTop = (options: OptionsType) => {
   animateTopScroll(0, proceedOptions(options));
 };
 
-const scrollTo = (toPosition, options) => {
+const scrollTo = (toPosition: number, options: OptionsType) => {
   animateTopScroll(toPosition, proceedOptions(options));
 };
 
-const scrollToBottom = (options) => {
+const scrollToBottom = (options: OptionsType) => {
   options = proceedOptions(options);
   setContainer(options);
   animateTopScroll(options.horizontal
@@ -242,7 +257,7 @@ const scrollToBottom = (options) => {
     options);
 };
 
-const scrollMore = (toPosition, options) => {
+const scrollMore = (toPosition: number, options: OptionsType) => {
   options = proceedOptions(options);
   setContainer(options);
   const currentPosition = options.horizontal ? currentPositionX(options) : currentPositionY(options)

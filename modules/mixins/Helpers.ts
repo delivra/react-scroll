@@ -2,55 +2,42 @@
 
 /* DEPRECATED */
 
-const React = require('react');
-const ReactDOM = require('react-dom');
+import * as React from 'react';
+import scrollSpy from './scroll-spy';
+import defaultScroller, { Scroller } from './scroller';
+import scrollHash from './scroll-hash';
+import { ReactScrollProps } from './component-props';
+import { isDocument } from './utils';
+import { checkPropTypes } from 'prop-types';
 
-const utils = require('./utils');
-const scrollSpy = require('./scroll-spy');
-const defaultScroller = require('./scroller');
-const PropTypes = require('prop-types');
-const scrollHash = require('./scroll-hash');
+type ComponentState = {
+  active: boolean;
+  container: HTMLElement | Document | undefined;
+};
 
-const protoTypes = {
-  to: PropTypes.string.isRequired,
-  containerId: PropTypes.string,
-  container: PropTypes.object,
-  activeClass: PropTypes.string,
-  spy: PropTypes.bool,
-  smooth: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
-  offset: PropTypes.number,
-  delay: PropTypes.number,
-  isDynamic: PropTypes.bool,
-  onClick: PropTypes.func,
-  duration: PropTypes.oneOfType([PropTypes.number, PropTypes.func]),
-  absolute: PropTypes.bool,
-  onSetActive: PropTypes.func,
-  onSetInactive: PropTypes.func,
-  ignoreCancelEvents: PropTypes.bool,
-  hashSpy: PropTypes.bool,
-  spyThrottle: PropTypes.number
+type ElementProps = {
+  name: string,
+  id: string
 };
 
 const Helpers = {
-  Scroll(Component, customScroller) {
+  Scroll(Component: React.ComponentType<any>, customScroller : Scroller | undefined) {
 
     console.warn("Helpers.Scroll is deprecated since v1.7.0");
 
     const scroller = customScroller || defaultScroller;
 
-    class Scroll extends React.Component {
-      constructor(props) {
-        super(props);
-        this.state = {
-          active: false
-        };
+    class Scroll extends React.Component<ReactScrollProps, ComponentState> {
+      public readonly state: ComponentState = {
+        active: false,
+        container: undefined
       }
 
-      scrollTo = (to, props) => {
+      scrollTo = (to: string, props: ReactScrollProps) => {
         scroller.scrollTo(to, Object.assign({}, this.state, props));
       }
 
-      handleClick = (event) => {
+      handleClick = (event: Event) => {
 
         /*
          * give the posibility to override onClick
@@ -84,7 +71,7 @@ const Helpers = {
         }
       }
 
-      spyHandler = (y) => {
+      spyHandler = (y: number) => {
 
         let scrollSpyContainer = this.getScrollSpyContainer();
 
@@ -98,7 +85,7 @@ const Helpers = {
         let elemBottomBound = 0;
         let containerTop = 0;
 
-        if (scrollSpyContainer.getBoundingClientRect) {
+        if (!isDocument(scrollSpyContainer) && scrollSpyContainer.getBoundingClientRect) {
           let containerCords = scrollSpyContainer.getBoundingClientRect();
           containerTop = containerCords.top;
         }
@@ -112,7 +99,7 @@ const Helpers = {
           elemBottomBound = elemTopBound + cords.height;
         }
 
-        let offsetY = y - this.props.offset;
+        let offsetY = y - (this.props.offset ?? 0);
         let isInside = (offsetY >= Math.floor(elemTopBound) && offsetY < Math.floor(elemBottomBound));
         let isOutside = (offsetY < Math.floor(elemTopBound) || offsetY >= Math.floor(elemBottomBound));
         let activeLink = scroller.getActiveLink();
@@ -152,7 +139,7 @@ const Helpers = {
         let container = this.props.container;
 
         if (containerId) {
-          return document.getElementById(containerId);
+          container = document.getElementById(containerId) ?? undefined;
         }
 
         if (container && container.nodeType) {
@@ -193,43 +180,33 @@ const Helpers = {
         scrollSpy.unmount(this.stateHandler, this.spyHandler);
       }
       render() {
-        var className = "";
+        let className = "";
 
         if (this.state && this.state.active) {
           className = ((this.props.className || "") + " " + (this.props.activeClass || "active")).trim();
         } else {
-          className = this.props.className;
+          className = this.props.className ?? '';
         }
 
-        var props = Object.assign({}, this.props);
-
-        for (var prop in protoTypes) {
-          if (props.hasOwnProperty(prop)) {
-            delete props[prop];
-          }
-        }
-
+        const props = {} as any;
         props.className = className;
         props.onClick = this.handleClick;
+        props.children = this.props.children;
 
         return React.createElement(Component, props);
       }
     };
-
-    Scroll.propTypes = protoTypes;
-
-    Scroll.defaultProps = { offset: 0 };
-
     return Scroll;
   },
 
-  Element(Component) {
+  Element(Component: React.ComponentType<ElementProps>) {
 
     console.warn("Helpers.Element is deprecated since v1.7.0");
 
-    class Element extends React.Component {
+    class Element extends React.Component<ElementProps> {
+      childBindings: {domNode: HTMLElement | null} | undefined;
 
-      constructor(props) {
+      constructor(props: ElementProps) {
         super(props);
         this.childBindings = {
           domNode: null
@@ -242,7 +219,7 @@ const Helpers = {
         }
         this.registerElems(this.props.name);
       }
-      componentDidUpdate(prevProps) {
+      componentDidUpdate(prevProps: ElementProps) {
         if (this.props.name !== prevProps.name) {
           this.registerElems(this.props.name);
         }
@@ -253,21 +230,16 @@ const Helpers = {
         }
         defaultScroller.unregister(this.props.name);
       }
-      registerElems(name) {
-        defaultScroller.register(name, this.childBindings.domNode);
+      registerElems(name: string) {
+        this.childBindings && this.childBindings.domNode && defaultScroller.register(name, this.childBindings.domNode);
       }
       render() {
-        return React.createElement(Component, Object.assign({}, this.props, { parentBindings: this.childBindings }));
+        return React.createElement(Component, {...this.props, ...{ parentBindings: this.childBindings }});
       }
     };
-
-    Element.propTypes = {
-      name: PropTypes.string,
-      id: PropTypes.string
-    }
 
     return Element;
   }
 };
 
-module.exports = Helpers;
+export default Helpers;

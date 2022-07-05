@@ -1,5 +1,10 @@
-const updateHash = (hash, historyUpdate) => {
-  const hashVal = hash.indexOf("#") === 0 ? hash.substring(1) : hash;
+
+export function isDocument(e : HTMLElement | Document) : e is Document  {
+  return e === document;
+}
+
+const updateHash = (hash?: string, historyUpdate?: boolean) => {
+  const hashVal = hash ? hash.indexOf("#") === 0 ? hash.substring(1) : hash : undefined;
   const hashToUpdate = hashVal ? `#${hashVal}` : "";
   const curLoc = window && window.location;
   const urlToPush = hashToUpdate
@@ -15,35 +20,38 @@ const getHash = () => {
   return window.location.hash.replace(/^#/, "");
 };
 
-const filterElementInContainer = (container) => (element) =>
+const filterElementInContainer = (container: HTMLElement) => (element: HTMLElement) =>
   container.contains
     ? container != element && container.contains(element)
     : !!(container.compareDocumentPosition(element) & 16);
 
-const isPositioned = (element) =>
+const isPositioned = (element: HTMLElement) =>
   getComputedStyle(element).position !== "static";
 
-const getElementOffsetInfoUntil = (element, predicate) => {
+const getElementOffsetInfoUntil = (element: HTMLElement | Document, predicate: (x: HTMLElement | Document) => boolean) => {
+  if (isDocument(element))
+    return {offsetTop: 0, offsetParent: element};
+
   let offsetTop = element.offsetTop;
-  let currentOffsetParent = element.offsetParent;
+  let currentOffsetParent = element.offsetParent as HTMLElement;
 
   while (currentOffsetParent && !predicate(currentOffsetParent)) {
     offsetTop += currentOffsetParent.offsetTop;
-    currentOffsetParent = currentOffsetParent.offsetParent;
+    currentOffsetParent = currentOffsetParent.offsetParent as HTMLElement;
   }
 
   return { offsetTop, offsetParent: currentOffsetParent };
 };
 
-const scrollOffset = (c, t, horizontal) => {
+const scrollOffset = (c: HTMLElement | Document, t: HTMLElement, horizontal: boolean) => {
   if (horizontal) {
-    return c === document
+    return isDocument(c)
       ? t.getBoundingClientRect().left + (window.scrollX || window.pageXOffset)
       : getComputedStyle(c).position !== "static"
         ? t.offsetLeft
         : t.offsetLeft - c.offsetLeft;
   } else {
-    if (c === document) {
+    if (isDocument(c)) {
       return (
         t.getBoundingClientRect().top + (window.scrollY || window.pageYOffset)
       );
@@ -76,7 +84,7 @@ const scrollOffset = (c, t, horizontal) => {
 
     if (isPositioned(c)) {
       if (t.offsetParent !== c) {
-        const isContainerElementOrDocument = (e) => e === c || e === document;
+        const isContainerElementOrDocument = (e: HTMLElement | Document) => e === c || e === document;
         const { offsetTop, offsetParent } = getElementOffsetInfoUntil(
           t,
           isContainerElementOrDocument
@@ -98,7 +106,6 @@ const scrollOffset = (c, t, horizontal) => {
       return t.offsetTop - c.offsetTop;
     }
 
-    const isDocument = (e) => e === document;
     return (
       getElementOffsetInfoUntil(t, isDocument).offsetTop -
       getElementOffsetInfoUntil(c, isDocument).offsetTop

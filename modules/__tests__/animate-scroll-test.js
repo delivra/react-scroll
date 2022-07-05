@@ -4,7 +4,7 @@ import React from 'react'
 
 import expect from 'expect'
 import animateScroll from '../mixins/animate-scroll';
-import events from '../mixins/scroll-events.js';
+import events from '../mixins/scroll-events';
 
 import { renderHorizontal } from './utility'
 

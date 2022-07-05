@@ -1,12 +1,13 @@
+type callback = (to: string | undefined, target: HTMLElement | Document | undefined, currentPosition?: number) => void;
 
 const Events = {
-	registered : {},
+	registered : {} as Record<string, callback>,
 	scrollEvent : {
-		register: (evtName, callback) => {
+		register: (evtName: string, callback: callback) => {
 			Events.registered[evtName] = callback;
 		},
-		remove:(evtName) => {
-			Events.registered[evtName] = null;
+		remove:(evtName: string) => {
+			delete Events.registered[evtName];
 		}
 	}
 };

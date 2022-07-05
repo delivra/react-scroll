@@ -1,9 +1,10 @@
 "use strict";
 
-import React from 'react';
+import * as React from 'react';
 import ScrollLink from '../mixins/scroll-link';
+import scroller from '../mixins/scroller';
 
-class ButtonElement extends React.Component{
+class ButtonElement extends React.Component<React.HTMLProps<HTMLInputElement>>{
   render() {
     return (
       <input {...this.props}>
@@ -13,4 +14,4 @@ class ButtonElement extends React.Component{
   }
 };
 
-export default ScrollLink(ButtonElement);
+export default ScrollLink(ButtonElement, scroller);

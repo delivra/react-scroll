@@ -1,49 +1,31 @@
-import React from 'react';
+import * as React from 'react';
 
 import scrollSpy from './scroll-spy';
-import defaultScroller from './scroller';
-import PropTypes from 'prop-types';
+import defaultScroller, { Scroller } from './scroller';
 import scrollHash from './scroll-hash';
+import { ReactScrollProps } from './component-props';
+import { isDocument } from './utils';
 
-const protoTypes = {
-  to: PropTypes.string.isRequired,
-  containerId: PropTypes.string,
-  container: PropTypes.object,
-  activeClass: PropTypes.string,
-  spy: PropTypes.bool,
-  horizontal: PropTypes.bool,
-  smooth: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
-  offset: PropTypes.number,
-  delay: PropTypes.number,
-  isDynamic: PropTypes.bool,
-  onClick: PropTypes.func,
-  duration: PropTypes.oneOfType([PropTypes.number, PropTypes.func]),
-  absolute: PropTypes.bool,
-  onSetActive: PropTypes.func,
-  onSetInactive: PropTypes.func,
-  ignoreCancelEvents: PropTypes.bool,
-  hashSpy: PropTypes.bool,
-  saveHashHistory: PropTypes.bool,
-  spyThrottle: PropTypes.number
+type LinkState = {
+  active: boolean,
+  container: HTMLElement | Document | undefined
 };
 
-export default (Component, customScroller) => {
+export default (Component: React.ComponentType<any>, customScroller: Scroller) => {
 
   const scroller = customScroller || defaultScroller;
 
-  class Link extends React.PureComponent {
-    constructor(props) {
-      super(props);
-      this.state = {
-        active: false
-      };
+  class Link extends React.PureComponent<ReactScrollProps, LinkState> {
+    public readonly state: LinkState = {
+      active: false,
+      container: undefined
     }
 
-    scrollTo = (to, props) => {
+    scrollTo = (to: string, props: ReactScrollProps) => {
       scroller.scrollTo(to, Object.assign({}, this.state, props));
     }
 
-    handleClick = (event) => {
+    handleClick = (event: Event) => {
 
       /*
        * give the posibility to override onClick
@@ -67,7 +49,7 @@ export default (Component, customScroller) => {
 
     }
 
-    spyHandler = (x, y) => {
+    spyHandler = (x: number, y: number) => {
       let scrollSpyContainer = this.getScrollSpyContainer();
 
       if (scrollHash.isMounted() && !scrollHash.isInitialized()) {
@@ -85,7 +67,7 @@ export default (Component, customScroller) => {
         let elemRightBound = 0;
         let containerLeft = 0;
 
-        if (scrollSpyContainer.getBoundingClientRect) {
+        if (!isDocument(scrollSpyContainer) && scrollSpyContainer.getBoundingClientRect) {
           let containerCords = scrollSpyContainer.getBoundingClientRect();
           containerLeft = containerCords.left;
         }
@@ -99,7 +81,7 @@ export default (Component, customScroller) => {
           elemRightBound = elemLeftBound + cords.width;
         }
 
-        let offsetX = x - this.props.offset;
+        let offsetX = x - (this.props.offset ?? 0);
         isInside = (offsetX >= Math.floor(elemLeftBound) && offsetX < Math.floor(elemRightBound));
         isOutside = (offsetX < Math.floor(elemLeftBound) || offsetX >= Math.floor(elemRightBound));
       } else {
@@ -107,7 +89,7 @@ export default (Component, customScroller) => {
         let elemBottomBound = 0;
         let containerTop = 0;
 
-        if (scrollSpyContainer.getBoundingClientRect) {
+        if (!isDocument(scrollSpyContainer) && scrollSpyContainer.getBoundingClientRect) {
           let containerCords = scrollSpyContainer.getBoundingClientRect();
           containerTop = containerCords.top;
         }
@@ -121,7 +103,7 @@ export default (Component, customScroller) => {
           elemBottomBound = elemTopBound + cords.height;
         }
 
-        let offsetY = y - this.props.offset;
+        let offsetY = y - (this.props.offset ?? 0);
         isInside = (offsetY >= Math.floor(elemTopBound) && offsetY < Math.floor(elemBottomBound));
         isOutside = (offsetY < Math.floor(elemTopBound) || offsetY >= Math.floor(elemBottomBound));
       }
@@ -162,7 +144,7 @@ export default (Component, customScroller) => {
       let container = this.props.container;
 
       if (containerId && !container) {
-        return document.getElementById(containerId);
+        container = document.getElementById(containerId) ?? undefined;
       }
 
       if (container && container.nodeType) {
@@ -196,7 +178,7 @@ export default (Component, customScroller) => {
       }
     }
     componentWillUnmount() {
-      scrollSpy.unmount(this.stateHandler, this.spyHandler);
+      scrollSpy.unmount(undefined, this.spyHandler);
     }
     render() {
       var className = "";
@@ -204,28 +186,17 @@ export default (Component, customScroller) => {
       if (this.state && this.state.active) {
         className = ((this.props.className || "") + " " + (this.props.activeClass || "active")).trim();
       } else {
-        className = this.props.className;
+        className = this.props.className ?? '';
       }
 
-      let props = Object.assign({}, this.props);
-
-      for (var prop in protoTypes) {
-        if (props.hasOwnProperty(prop)) {
-          delete props[prop];
-        }
-      }
-
+      let props = {} as any;
       props.className = className;
       props.onClick = this.handleClick;
-
+      props.children = this.props.children;
 
       return React.createElement(Component, props);
     }
   };
-
-  Link.propTypes = protoTypes;
-
-  Link.defaultProps = { offset: 0 };
 
   return Link;
 }

@@ -2,7 +2,6 @@ import expect from 'expect'
 import animateScroll from '../mixins/animate-scroll';
 import smooth from '../mixins/smooth';
 
-
 describe('AnimationTypeUnitTests', () => {
 
   it('chooses correct easing function with no smooth options', () => {

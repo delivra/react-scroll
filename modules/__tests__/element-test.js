@@ -1,8 +1,7 @@
 import { render, unmountComponentAtNode } from 'react-dom'
 import expect from 'expect'
 import React from 'react'
-import Element from '../components/Element.js';
-import assert from 'assert';
+import Element from '../components/Element';
 
 describe('Element', function () {
 

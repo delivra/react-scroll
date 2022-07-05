@@ -2,9 +2,8 @@
 import { render, unmountComponentAtNode, findDOMNode } from 'react-dom'
 import Rtu from 'react-dom/test-utils'
 import React from 'react'
-import expect from 'expect'
-import assert from 'assert';
-import scroll from '../mixins/animate-scroll.js';
+import expect from 'expect';
+import scroll from '../mixins/animate-scroll';
 
 describe('Scroll cancelation', () => {
   let node = document.createElement('div');

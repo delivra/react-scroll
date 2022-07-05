@@ -1,18 +1,23 @@
-import throttle from "lodash.throttle";
+import { throttle } from "lodash";
 import { addPassiveEventListener } from './passive-event-listeners';
+import { isDocument } from "./utils";
 
 // The eventHandler will execute at a rate of 15fps by default
-const eventThrottler = (eventHandler, throttleAmount = 66)  => throttle(eventHandler, throttleAmount);
+const eventThrottler = (eventHandler: () => void, throttleAmount = 66)  => throttle(eventHandler, throttleAmount);
+
+type SpyCallback = (x: number, y: number) => void;
+
+type SpyCallbackContainer = {
+  spyCallbacks: SpyCallback[],
+};
 
 const scrollSpy = {
+  spySetState: [] as (() => void)[],
+  scrollSpyContainers: [] as (HTMLElement | Document)[],
 
-  spyCallbacks: [],
-  spySetState: [],
-  scrollSpyContainers: [],
-
-  mount(scrollSpyContainer, throttle) {
+  mount(scrollSpyContainer: HTMLElement | Document, throttle?: number) {
     if (scrollSpyContainer) {
-      const eventHandler = eventThrottler((event) => {
+      const eventHandler = eventThrottler(() => {
         scrollSpy.scrollHandler(scrollSpyContainer);
       }, throttle);
       scrollSpy.scrollSpyContainers.push(scrollSpyContainer);
@@ -20,12 +25,12 @@ const scrollSpy = {
     }
   },
 
-  isMounted(scrollSpyContainer) {
+  isMounted(scrollSpyContainer: HTMLElement | Document) {
     return scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer) !== -1;
   },
 
-  currentPositionX(scrollSpyContainer) {
-    if(scrollSpyContainer === document) {
+  currentPositionX(scrollSpyContainer: HTMLElement | Document) {
+    if (isDocument(scrollSpyContainer)) {
       let supportPageOffset = window.pageYOffset !== undefined;
       let isCSS1Compat = ((document.compatMode || "") === "CSS1Compat");
       return supportPageOffset ? window.pageXOffset : isCSS1Compat ?
@@ -35,8 +40,8 @@ const scrollSpy = {
     }
   },
 
-  currentPositionY(scrollSpyContainer) {
-    if(scrollSpyContainer === document) {
+  currentPositionY(scrollSpyContainer: HTMLElement | Document) {
+    if (isDocument(scrollSpyContainer)) {
       let supportPageOffset = window.pageXOffset !== undefined;
       let isCSS1Compat = ((document.compatMode || "") === "CSS1Compat");
       return supportPageOffset ? window.pageYOffset : isCSS1Compat ?
@@ -46,23 +51,25 @@ const scrollSpy = {
     }
   },
 
-  scrollHandler(scrollSpyContainer) {
-    let callbacks = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)].spyCallbacks || [];
+  scrollHandler(scrollSpyContainer: HTMLElement | Document) {
+    const container = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)];
+    let callbacks = (container as unknown as SpyCallbackContainer).spyCallbacks || [];
     callbacks.forEach(c => c(scrollSpy.currentPositionX(scrollSpyContainer), scrollSpy.currentPositionY(scrollSpyContainer)));
   },
 
-  addStateHandler(handler) {
+  addStateHandler(handler: () => void) {
     scrollSpy.spySetState.push(handler);
   },
 
-  addSpyHandler(handler, scrollSpyContainer) {
+  addSpyHandler(handler: SpyCallback, scrollSpyContainer: HTMLElement | Document) {
     let container = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)];
 
-    if(!container.spyCallbacks) {
-      container.spyCallbacks = [];
+    const spyCallbackContainer = container as unknown as SpyCallbackContainer
+    if(!spyCallbackContainer.spyCallbacks) {
+      spyCallbackContainer.spyCallbacks = [];
     }
 
-    container.spyCallbacks.push(handler);
+    spyCallbackContainer.spyCallbacks.push(handler);
 
     handler(scrollSpy.currentPositionX(scrollSpyContainer), scrollSpy.currentPositionY(scrollSpyContainer));
   },
@@ -71,14 +78,17 @@ const scrollSpy = {
     scrollSpy.spySetState.forEach(s => s());
   },
 
-  unmount(stateHandler, spyHandler) {
-    scrollSpy.scrollSpyContainers.forEach(c => c.spyCallbacks && c.spyCallbacks.length && c.spyCallbacks.splice(c.spyCallbacks.indexOf(spyHandler), 1))
+  unmount(stateHandler: undefined | (() => void), spyHandler: SpyCallback) {
+    scrollSpy.scrollSpyContainers.forEach(container => {
+      const c = container as unknown as SpyCallbackContainer;
+      c.spyCallbacks && c.spyCallbacks.length && c.spyCallbacks.splice(c.spyCallbacks.indexOf(spyHandler), 1)
+    });
 
-    if(scrollSpy.spySetState && scrollSpy.spySetState.length) {
+    if (stateHandler && scrollSpy.spySetState && scrollSpy.spySetState.length) {
       scrollSpy.spySetState.splice(scrollSpy.spySetState.indexOf(stateHandler), 1);
     }
 
-    document.removeEventListener('scroll', scrollSpy.scrollHandler);
+    document.removeEventListener('scroll', scrollSpy.scrollHandler as any);
   },
 
   update: () => scrollSpy.scrollSpyContainers.forEach(c => scrollSpy.scrollHandler(c))
