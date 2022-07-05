@@ -10,11 +10,6 @@ import { ReactScrollProps } from './component-props';
 const getAnimationType = (options : ReactScrollProps) => typeof options.smooth === 'string' && smooth[options.smooth] || smooth.defaultEasing;
 
 /**
- * Function helper
- */
-const functionWrapper = (value : number | ((x: number) => number)) => typeof value === 'function' ? value :  (function () { return value; });
-
-/**
  * Wraps window properties to allow server side rendering
  */
 const currentWindowProperties = () => {
@@ -182,7 +177,7 @@ const setContainer = (options: OptionsType) => {
 };
 
 const animateTopScroll = (scrollOffset: number, inputOptions: ReactScrollProps, to?: string, target?: HTMLElement | Document) => {
-  const options = proceedOptions({...inputOptions, ...{data:undefined}});
+  const options = proceedOptions({...inputOptions, data: undefined});
 
   window.clearTimeout(options.data.delayTimeout);
 
@@ -208,8 +203,17 @@ const animateTopScroll = (scrollOffset: number, inputOptions: ReactScrollProps, 
 
   options.data.delta = Math.round(options.data.targetPosition - options.data.startPosition);
 
-  options.data.duration = functionWrapper(options.duration ?? 0)(options.data.delta);
-  options.data.duration = isNaN(options.data.duration) ? 1000 : options.data.duration;
+  if (typeof options.duration === 'function') {
+    //Supplied function
+    options.data.duration = options.duration(options.data.delta);
+  } else if (typeof options.duration === 'number') {
+    //Static duration
+    options.data.duration = options.duration;
+  } else {
+    //Default to 1ms per pixel
+    options.data.duration = Math.abs(options.data.delta);
+  }
+
   options.data.to = to;
   options.data.target = target;
 

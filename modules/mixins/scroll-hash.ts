@@ -1,4 +1,3 @@
-import { addPassiveEventListener } from './passive-event-listeners';
 import { Scroller } from './scroller';
 import utils from './utils';
 

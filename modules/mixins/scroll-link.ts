@@ -21,7 +21,7 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
     }
 
     scrollTo = (to: string, props: ReactScrollProps) => {
-      scroller.scrollTo(to, Object.assign({}, this.state, props));
+      scroller.scrollTo(to, {...this.state, ...props});
     }
 
     handleClick = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
@@ -42,7 +42,6 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
        * do the magic!
        */
       this.scrollTo(this.props.to, this.props);
-
     }
 
     spyHandler = (x: number, y: number) => {
@@ -107,20 +106,30 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
       let activeLink = scroller.getActiveLink();
 
       if (isOutside) {
-        if (to === activeLink) {
-          scroller.setActiveLink(void 0);
-        }
+        if (this.props.sticky) {
+          //Sticky behavior, don't set scroller to inactive
+          if (activeLink && to !== activeLink) {
+            //Time to change            
+            if (this.props.spy && this.state.active) {
+              this.setState({ active: false });
+              this.props.onSetInactive && this.props.onSetInactive(to, element);
+            }
+          }
+        } else {
+          if (to === activeLink) {
+            scroller.setActiveLink(void 0);
+          }
 
-        if (this.props.hashSpy && scrollHash.getHash() === to) {
-          const { saveHashHistory = false } = this.props
-          scrollHash.changeHash("", saveHashHistory);
-        }
+          if (this.props.hashSpy && scrollHash.getHash() === to) {
+            const { saveHashHistory = false } = this.props
+            scrollHash.changeHash("", saveHashHistory);
+          }
 
-        if (this.props.spy && this.state.active) {
-          this.setState({ active: false });
-          this.props.onSetInactive && this.props.onSetInactive(to, element);
+          if (this.props.spy && this.state.active) {
+            this.setState({ active: false });
+            this.props.onSetInactive && this.props.onSetInactive(to, element);
+          }
         }
-
       }
 
       if (isInside && (activeLink !== to || this.state.active === false)) {

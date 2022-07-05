@@ -4,7 +4,8 @@ import scroller from './scroller';
 
 type ComponentProps = {
   name: string;
-  id:   string;
+  id?:   string;
+  children?: React.ReactNode;
 };
 
 export default (Component:React.ComponentType<ReactScrollElementProps>) => {

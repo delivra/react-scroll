@@ -94,9 +94,14 @@ export interface ReactScrollProps {
   saveHashHistory?: boolean;
 
   /**
-   * 	Time of the spy throttle - can be a number
+   * Time of the spy throttle - can be a number
    */
   spyThrottle?: number;
+
+  /**
+   * Whether link should remain active until another link becomes active (true) or immediately deactivate upon scrolling past the element (false)
+   */
+  sticky?: boolean;
 }
 
 export type ReactScrollLinkProps = {  
@@ -106,6 +111,7 @@ export type ReactScrollLinkProps = {
 };
 
 export type ReactScrollElementProps = {
+  children?: React.ReactNode;
   parentBindings: {
     domNode: HTMLElement;
   }

@@ -32,15 +32,14 @@ export class Scroller {
   }
 
   scrollTo(to: string, props: ReactScrollProps) {
-
     let target = this.get(to);
 
     if (!target) {
       console.warn("target Element not found");
       return;
     }
-
-    props = Object.assign({}, props, { absolute: false });
+    
+    props = {...props, absolute: false};
 
     let containerId = props.containerId;
     let container = props.container;

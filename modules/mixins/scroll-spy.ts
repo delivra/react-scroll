@@ -6,9 +6,15 @@ import { isDocument } from "./utils";
 const eventThrottler = (eventHandler: () => void, throttleAmount = 66)  => throttle(eventHandler, throttleAmount);
 
 type SpyCallback = (x: number, y: number) => void;
+type SpyCallbackState = {
+  callbacks: SpyCallback[];
+  xPosition: number;
+  yPosition: number;
+};
+const SpyCallbackKey = Symbol("SpyCallback");
 
 type SpyCallbackContainer = {
-  spyCallbacks: SpyCallback[],
+  [SpyCallbackKey]?: SpyCallbackState,
 };
 
 const scrollSpy = {
@@ -53,8 +59,27 @@ const scrollSpy = {
 
   scrollHandler(scrollSpyContainer: HTMLElement | Document) {
     const container = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)];
-    let callbacks = (container as unknown as SpyCallbackContainer).spyCallbacks || [];
-    callbacks.forEach(c => c(scrollSpy.currentPositionX(scrollSpyContainer), scrollSpy.currentPositionY(scrollSpyContainer)));
+    const state = (container as unknown as SpyCallbackContainer)[SpyCallbackKey];
+    if (!state)
+      return;
+
+    //Capture new scroll coords
+    const xPosition = scrollSpy.currentPositionX(scrollSpyContainer);
+    const yPosition = scrollSpy.currentPositionY(scrollSpyContainer);
+
+    //Detect scroll direction
+    const increasing = (xPosition > state.xPosition || yPosition > state.yPosition);
+
+    //Store new coords
+    state.xPosition = xPosition;
+    state.yPosition = yPosition;
+
+    //We assume callbacks were added in ascending order, always process backwards from scroll direction
+    if (increasing) {
+      state.callbacks.slice().reverse().forEach(c => c(xPosition, yPosition));
+    } else {
+      state.callbacks.forEach(c => c(xPosition, yPosition));
+    }
   },
 
   addStateHandler(handler: () => void) {
@@ -62,14 +87,18 @@ const scrollSpy = {
   },
 
   addSpyHandler(handler: SpyCallback, scrollSpyContainer: HTMLElement | Document) {
-    let container = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)];
+    const container = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)];
 
     const spyCallbackContainer = container as unknown as SpyCallbackContainer
-    if(!spyCallbackContainer.spyCallbacks) {
-      spyCallbackContainer.spyCallbacks = [];
+    if(!spyCallbackContainer[SpyCallbackKey]) {
+      spyCallbackContainer[SpyCallbackKey] = { 
+        callbacks: [],
+        xPosition: this.currentPositionX(scrollSpyContainer),
+        yPosition: this.currentPositionY(scrollSpyContainer)
+      };
     }
 
-    spyCallbackContainer.spyCallbacks.push(handler);
+    spyCallbackContainer[SpyCallbackKey]?.callbacks.push(handler);
 
     handler(scrollSpy.currentPositionX(scrollSpyContainer), scrollSpy.currentPositionY(scrollSpyContainer));
   },
@@ -80,8 +109,10 @@ const scrollSpy = {
 
   unmount(stateHandler: undefined | (() => void), spyHandler: SpyCallback) {
     scrollSpy.scrollSpyContainers.forEach(container => {
-      const c = container as unknown as SpyCallbackContainer;
-      c.spyCallbacks && c.spyCallbacks.length && c.spyCallbacks.splice(c.spyCallbacks.indexOf(spyHandler), 1)
+      const c = (container as unknown as SpyCallbackContainer)[SpyCallbackKey];
+      if (c) {
+        c.callbacks.splice(c.callbacks.indexOf(spyHandler), 1)
+      } 
     });
 
     if (stateHandler && scrollSpy.spySetState && scrollSpy.spySetState.length) {

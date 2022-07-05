@@ -2,10 +2,10 @@
   "name": "react-scroll",
   "version": "1.8.6",
   "description": "A scroll component for React.js",
-  "main": "modules",
+  "main": "./modules/index.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fisshy/react-scroll.git"
+    "url": "git+https://github.com/delivra/react-scroll.git"
   },
   "scripts": {
     "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
@@ -14,9 +14,9 @@
     "test": "karma start",
     "start": "npm run examples"
   },
-  "homepage": "https://github.com/fisshy/react-scroll",
+  "homepage": "https://github.com/delivra/react-scroll",
   "bugs": {
-    "url": "https://github.com/fisshy/react-scroll/issues"
+    "url": "https://github.com/delivra/react-scroll/issues"
   },
   "authors": [
     "Joachim Karlsson"
