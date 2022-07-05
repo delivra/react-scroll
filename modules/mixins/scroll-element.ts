@@ -20,26 +20,28 @@ export default (Component:React.ComponentType<ReactScrollElementProps>) => {
       }
       this.registerElems(this.props.name);
     }
+
     componentDidUpdate(prevProps: ComponentProps) {
       if (this.props.name !== prevProps.name) {
         this.registerElems(this.props.name);
       }
     }
+
     componentWillUnmount() {
       if (typeof window === 'undefined') {
         return false;
       }
       scroller.unregister(this.props.name);
     }
+
     registerElems(name: string) {
       this.childBindings.domNode && scroller.register(name, this.childBindings.domNode);
     }
+    
     render() {
       const props: ReactScrollElementProps = {
         ...this.props,
-        parentBindings: {
-          domNode: this.childBindings.domNode!
-        }
+        parentBindings: this.childBindings
       };
 
       return React.createElement(Component, props);

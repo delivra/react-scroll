@@ -3,24 +3,60 @@ import animateScroll from './animate-scroll';
 import events from './scroll-events';
 import { ReactScrollProps } from './component-props';
 
+type VisibilityCallback = (isVisible: boolean) => void;
+
+type ScrollMapping = {
+  element?: HTMLElement;
+  callbacks: VisibilityCallback[];
+};
+
 export class Scroller {
-  __mapped: Record<string, HTMLElement> = {}
+  __mapped: Record<string, ScrollMapping> = {}
   __activeLink: string | undefined
 
   unmount() {
     this.__mapped = {};
   }
 
-  register(name: string, element: HTMLElement){
-    this.__mapped[name] = element;
+  register(name: string, element: HTMLElement) {
+    if (this.__mapped[name]) {
+      this.__mapped[name].callbacks.forEach(c => c(true));
+    }
+    this.__mapped[name] = {
+      element, callbacks: []
+    };
+  }
+  
+  /**
+   * Subscribe to register/unregisters of elements with the given name
+   */
+  subscribe(name: string, visibilityHandler: VisibilityCallback) {
+    if (!this.__mapped[name]) {
+      this.__mapped[name] = {
+        callbacks: [visibilityHandler]
+      };
+    } else {
+      this.__mapped[name].callbacks.push(visibilityHandler);
+    }
+  }
+
+  unsubscribe(name: string, visibilityHandler: VisibilityCallback) {
+    if (this.__mapped[name]) {
+      const inx = this.__mapped[name].callbacks.indexOf(visibilityHandler);
+      inx > -1 && this.__mapped[name].callbacks.splice(inx, 1);      
+    }
   }
 
   unregister(name: string) {
+    if (this.__mapped[name]) {
+      this.__mapped[name].callbacks.forEach(c => c(false));
+    }
+
     delete this.__mapped[name];
   }
 
-  get(name: string) : HTMLElement {
-    return this.__mapped[name] || document.getElementById(name) || document.getElementsByName(name)[0];
+  get(name: string) : HTMLElement | undefined {
+    return this.__mapped[name]?.element ?? document.getElementById(name) ?? document.getElementsByName(name)[0] ?? undefined;
   }
 
   setActiveLink(link: string | undefined) {
@@ -28,14 +64,14 @@ export class Scroller {
   }
 
   getActiveLink() {
-    return this.__activeLink
+    return this.__activeLink;
   }
 
   scrollTo(to: string, props: ReactScrollProps) {
     let target = this.get(to);
 
     if (!target) {
-      console.warn("target Element not found");
+      console.warn(`Target element '${to}' not found`);
       return;
     }
     
@@ -88,7 +124,6 @@ export class Scroller {
     /*
      * Animate scrolling
      */
-
     animateScroll.animateTopScroll(scrollOffset, props, to, target);
   }
 }

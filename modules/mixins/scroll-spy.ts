@@ -111,12 +111,14 @@ const scrollSpy = {
     scrollSpy.scrollSpyContainers.forEach(container => {
       const c = (container as unknown as SpyCallbackContainer)[SpyCallbackKey];
       if (c) {
-        c.callbacks.splice(c.callbacks.indexOf(spyHandler), 1)
+        const inx = c.callbacks.indexOf(spyHandler);
+        inx > -1 && c.callbacks.splice(inx, 1)
       } 
     });
 
     if (stateHandler && scrollSpy.spySetState && scrollSpy.spySetState.length) {
-      scrollSpy.spySetState.splice(scrollSpy.spySetState.indexOf(stateHandler), 1);
+      const inx = scrollSpy.spySetState.indexOf(stateHandler);
+      inx > -1 && scrollSpy.spySetState.splice(inx, 1);
     }
 
     document.removeEventListener('scroll', scrollSpy.scrollHandler as any);

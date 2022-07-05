@@ -102,6 +102,11 @@ export interface ReactScrollProps {
    * Whether link should remain active until another link becomes active (true) or immediately deactivate upon scrolling past the element (false)
    */
   sticky?: boolean;
+
+  /**
+   * Whether link should automatically hide itself is the target element isn't available
+   */
+  autoHide?: boolean;
 }
 
 export type ReactScrollLinkProps = {  
@@ -113,6 +118,6 @@ export type ReactScrollLinkProps = {
 export type ReactScrollElementProps = {
   children?: React.ReactNode;
   parentBindings: {
-    domNode: HTMLElement;
+    domNode?: HTMLElement;
   }
 } & React.HTMLProps<HTMLDivElement>;

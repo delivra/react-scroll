@@ -8,6 +8,7 @@ import { isDocument } from './utils';
 
 type LinkState = {
   active: boolean,
+  visible: boolean,
   container: HTMLElement | Document | undefined
 };
 
@@ -17,6 +18,7 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
   class Link extends React.PureComponent<ReactScrollProps, LinkState> {
     public readonly state: LinkState = {
       active: false,
+      visible: true,
       container: undefined
     }
 
@@ -144,6 +146,12 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
       }
     }
 
+    visibilityHandler = (isVisible: boolean) => {
+      this.setState({
+        visible: this.props.autoHide ? isVisible : true
+      });
+    }
+
     getScrollSpyContainer() {
       let containerId = this.props.containerId;
       let container = this.props.container;
@@ -174,17 +182,23 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
           scrollHash.mapContainer(this.props.to, scrollSpyContainer);
         }
 
+        if (this.props.autoHide) {
+          scroller.subscribe(this.props.to, this.visibilityHandler);
+        }
         scrollSpy.addSpyHandler(this.spyHandler, scrollSpyContainer);
 
         this.setState({
-          container: scrollSpyContainer
+          container: scrollSpyContainer,
+          visible: this.props.autoHide ? !!scroller.get(this.props.to) : true
         });
-
       }
     }
+
     componentWillUnmount() {
+      scroller.unsubscribe(this.props.to, this.visibilityHandler);
       scrollSpy.unmount(undefined, this.spyHandler);
     }
+
     render() {
       var className = "";
 
@@ -199,8 +213,12 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
         onClick: this.handleClick,
         children: this.props.children
       };
-      
-      return React.createElement(Component, props);
+
+      if (this.state.visible) {
+        return React.createElement(Component, props);
+      } else {
+        return null;
+      }
     }
   };
 
