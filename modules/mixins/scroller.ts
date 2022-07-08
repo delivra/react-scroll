@@ -68,7 +68,7 @@ export class Scroller {
   }
 
   scrollTo(to: string, props: ReactScrollProps) {
-    let target = this.get(to);
+    const target = this.get(to);
 
     if (!target) {
       console.warn(`Target element '${to}' not found`);
@@ -77,7 +77,7 @@ export class Scroller {
     
     props = {...props, absolute: false};
 
-    let containerId = props.containerId;
+    const { containerId, offset = 0, horizontal = false } = props;
     let container = props.container;
 
     let containerElement: HTMLElement | Document;
@@ -93,8 +93,7 @@ export class Scroller {
 
     props.absolute = true;
 
-    let horizontal = props.horizontal
-    let scrollOffset = utils.scrollOffset(containerElement, target, horizontal ?? false) + (props.offset || 0);
+    const scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset;
 
     /*
      * if animate is not provided just scroll into the view

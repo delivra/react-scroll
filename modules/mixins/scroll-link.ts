@@ -46,68 +46,54 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
       this.scrollTo(this.props.to, this.props);
     }
 
-    spyHandler = (x: number, y: number) => {
-      let scrollSpyContainer = this.getScrollSpyContainer();
+    getScrollCoords(element: HTMLElement) {
+      const result = {
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0
+      };
 
+      const scrollSpyContainer = this.getScrollSpyContainer();
+      if (!isDocument(scrollSpyContainer) && scrollSpyContainer.getBoundingClientRect) {
+        const containerCords = scrollSpyContainer.getBoundingClientRect();
+        result.left -= containerCords.left;
+        result.top -= containerCords.top;
+      }
+
+      const rect = element.getBoundingClientRect();
+      result.left += rect.left;
+      result.right = result.left + rect.width;
+
+      result.top += rect.top;
+      result.bottom = result.top + rect.height;
+
+      return result;
+    }
+
+    spyHandler = () => {
       if (scrollHash.isMounted() && !scrollHash.isInitialized()) {
         return;
       }
 
-      const {horizontal} = this.props;
-      let to = this.props.to;
-      let element = null;
-      let isInside;
-      let isOutside;
-
-      if (horizontal) {
-        let elemLeftBound = 0;
-        let elemRightBound = 0;
-        let containerLeft = 0;
-
-        if (!isDocument(scrollSpyContainer) && scrollSpyContainer.getBoundingClientRect) {
-          let containerCords = scrollSpyContainer.getBoundingClientRect();
-          containerLeft = containerCords.left;
-        }
-
-        if (!element || this.props.isDynamic) {
-          element = scroller.get(to);
-          if (!element) { return; }
-
-          let cords = element.getBoundingClientRect();
-          elemLeftBound = (cords.left - containerLeft + x);
-          elemRightBound = elemLeftBound + cords.width;
-        }
-
-        let offsetX = x - (this.props.offset ?? 0);
-        isInside = (offsetX >= Math.floor(elemLeftBound) && offsetX < Math.floor(elemRightBound));
-        isOutside = (offsetX < Math.floor(elemLeftBound) || offsetX >= Math.floor(elemRightBound));
-      } else {
-        let elemTopBound = 0;
-        let elemBottomBound = 0;
-        let containerTop = 0;
-
-        if (!isDocument(scrollSpyContainer) && scrollSpyContainer.getBoundingClientRect) {
-          let containerCords = scrollSpyContainer.getBoundingClientRect();
-          containerTop = containerCords.top;
-        }
-
-        if (!element || this.props.isDynamic) {
-          element = scroller.get(to);
-          if (!element) { return; }
-
-          let cords = element.getBoundingClientRect();
-          elemTopBound = (cords.top - containerTop + y);
-          elemBottomBound = elemTopBound + cords.height;
-        }
-
-        let offsetY = y - (this.props.offset ?? 0);
-        isInside = (offsetY >= Math.floor(elemTopBound) && offsetY < Math.floor(elemBottomBound));
-        isOutside = (offsetY < Math.floor(elemTopBound) || offsetY >= Math.floor(elemBottomBound));
+      const { horizontal = false, to, offset = 0 } = this.props;
+      const element = scroller.get(to);
+      if (!element) { 
+        return; 
       }
 
-      let activeLink = scroller.getActiveLink();
+      const coords = this.getScrollCoords(element);
 
-      if (isOutside) {
+      let isInside: boolean;
+      if (horizontal) {
+        isInside = (offset >= Math.floor(coords.left) && offset < Math.floor(coords.right));
+      } else {
+        isInside = (offset >= Math.floor(coords.top) && offset < Math.floor(coords.bottom));
+      }
+
+      const activeLink = scroller.getActiveLink();
+
+      if (!isInside) {
         if (this.props.sticky) {
           //Sticky behavior, don't set scroller to inactive
           if (activeLink && to !== activeLink) {
