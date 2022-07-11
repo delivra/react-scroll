@@ -1,6 +1,5 @@
 import { throttle } from "lodash";
 import { addPassiveEventListener } from './passive-event-listeners';
-import { isDocument } from "./utils";
 
 // The eventHandler will execute at a rate of 15fps by default
 const eventThrottler = (eventHandler: () => void, throttleAmount = 66)  => throttle(eventHandler, throttleAmount);
@@ -8,8 +7,6 @@ const eventThrottler = (eventHandler: () => void, throttleAmount = 66)  => throt
 type SpyCallback = () => void;
 type SpyCallbackState = {
   callbacks: SpyCallback[];
-  xPosition: number;
-  yPosition: number;
 };
 const SpyCallbackKey = Symbol("SpyCallback");
 
@@ -35,39 +32,13 @@ const scrollSpy = {
     return scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer) !== -1;
   },
 
-  currentPosition(scrollSpyContainer: HTMLElement | Document) {
-    const ele = isDocument(scrollSpyContainer) ? (document.scrollingElement ?? document.documentElement ?? document.body) : scrollSpyContainer;
-
-    return {
-      left: ele.scrollLeft,
-      top: ele.scrollTop,
-      height: ele.scrollHeight,
-      width: ele.scrollWidth
-    };
-  },
-
   scrollHandler(scrollSpyContainer: HTMLElement | Document) {
     const container = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)];
     const state = (container as unknown as SpyCallbackContainer)[SpyCallbackKey];
     if (!state)
       return;
-
-    //Capture new scroll coords
-    const coords = scrollSpy.currentPosition(scrollSpyContainer);
-
-    //Detect scroll direction
-    const increasing = (coords.left > state.xPosition || coords.top > state.yPosition);
-
-    //Store new coords
-    state.xPosition = coords.left;
-    state.yPosition = coords.top;
-
-    //We assume callbacks were added in ascending order, always process backwards from scroll direction
-    if (increasing) {
-      state.callbacks.slice().reverse().forEach(c => c());
-    } else {
-      state.callbacks.forEach(c => c());
-    }
+ 
+    state.callbacks.forEach(c => c());
   },
 
   addStateHandler(handler: () => void) {
@@ -78,13 +49,10 @@ const scrollSpy = {
     const container = scrollSpy.scrollSpyContainers[scrollSpy.scrollSpyContainers.indexOf(scrollSpyContainer)];
 
     const spyCallbackContainer = container as unknown as SpyCallbackContainer
-    const coords = scrollSpy.currentPosition(scrollSpyContainer);
 
     if(!spyCallbackContainer[SpyCallbackKey]) {
       spyCallbackContainer[SpyCallbackKey] = { 
-        callbacks: [],
-        xPosition: coords.left,
-        yPosition: coords.top
+        callbacks: []
       };
     }
 

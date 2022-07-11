@@ -3,7 +3,7 @@ export function isDocument(e : HTMLElement | Document) : e is Document  {
   return e === document;
 }
 
-const updateHash = (hash?: string, historyUpdate?: boolean) => {
+export function updateHash(hash?: string, historyUpdate?: boolean) {
   const hashVal = hash ? hash.indexOf("#") === 0 ? hash.substring(1) : hash : undefined;
   const hashToUpdate = hashVal ? `#${hashVal}` : "";
   const curLoc = window && window.location;
@@ -13,22 +13,15 @@ const updateHash = (hash?: string, historyUpdate?: boolean) => {
   historyUpdate
     ? history.pushState(history.state, "", urlToPush)
     : history.replaceState(history.state, "", urlToPush);
+}
 
-};
-
-const getHash = () => {
+export function getHash() {
   return window.location.hash.replace(/^#/, "");
-};
+}
 
-const filterElementInContainer = (container: HTMLElement) => (element: HTMLElement) =>
-  container.contains
-    ? container != element && container.contains(element)
-    : !!(container.compareDocumentPosition(element) & 16);
+const isPositioned = (element: HTMLElement) => getComputedStyle(element).position !== "static";
 
-const isPositioned = (element: HTMLElement) =>
-  getComputedStyle(element).position !== "static";
-
-const getElementOffsetInfoUntil = (element: HTMLElement | Document, predicate: (x: HTMLElement | Document) => boolean) => {
+function getElementOffsetInfoUntil (element: HTMLElement | Document, predicate: (x: HTMLElement | Document) => boolean) {
   if (isDocument(element))
     return {offsetTop: 0, offsetParent: element};
 
@@ -41,9 +34,9 @@ const getElementOffsetInfoUntil = (element: HTMLElement | Document, predicate: (
   }
 
   return { offsetTop, offsetParent: currentOffsetParent };
-};
+}
 
-const scrollOffset = (c: HTMLElement | Document, t: HTMLElement, horizontal: boolean) => {
+export function scrollOffset (c: HTMLElement | Document, t: HTMLElement, horizontal: boolean) {
   if (horizontal) {
     return isDocument(c)
       ? t.getBoundingClientRect().left + (window.scrollX || window.pageXOffset)
@@ -111,11 +104,17 @@ const scrollOffset = (c: HTMLElement | Document, t: HTMLElement, horizontal: boo
       getElementOffsetInfoUntil(c, isDocument).offsetTop
     );
   }
-};
+}
 
-export default {
-  updateHash,
-  getHash,
-  filterElementInContainer,
-  scrollOffset,
-};
+export function currentPosition(scrollSpyContainer: HTMLElement | Document) {
+  const ele = isDocument(scrollSpyContainer) ? (document.scrollingElement ?? document.documentElement ?? document.body) : scrollSpyContainer;
+
+  return {
+    left: ele.scrollLeft,
+    top: ele.scrollTop,
+    height: ele.clientHeight,
+    width: ele.clientWidth,
+    totalHeight: ele.scrollHeight,
+    totalWidth: ele.scrollWidth
+  };
+}

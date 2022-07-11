@@ -1,5 +1,5 @@
 import { Scroller } from './scroller';
-import utils from './utils';
+import * as utils from './utils';
 
 const scrollHash = {
   mountFlag: false,

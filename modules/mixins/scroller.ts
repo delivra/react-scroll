@@ -1,4 +1,4 @@
-import utils, { isDocument } from './utils';
+import * as utils from './utils';
 import animateScroll from './animate-scroll';
 import events from './scroll-events';
 import { ReactScrollProps } from './component-props';
@@ -19,12 +19,16 @@ export class Scroller {
   }
 
   register(name: string, element: HTMLElement) {
+    let callbacks;
     if (this.__mapped[name]) {
-      this.__mapped[name].callbacks.forEach(c => c(true));
+      callbacks = this.__mapped[name].callbacks;
     }
+
     this.__mapped[name] = {
       element, callbacks: []
     };
+
+    callbacks?.forEach(c => c(true));
   }
   
   /**
@@ -57,6 +61,26 @@ export class Scroller {
 
   get(name: string) : HTMLElement | undefined {
     return this.__mapped[name]?.element ?? document.getElementById(name) ?? document.getElementsByName(name)[0] ?? undefined;
+  }
+
+  getClosest(container: HTMLElement | Document, props: ReactScrollProps) : HTMLElement | undefined {
+    const elements = Object.values(this.__mapped).map(m => m.element).filter(Boolean) as HTMLElement[];
+
+    const { horizontal = false } = props;
+    const currentPosition = utils.currentPosition(container);
+
+    //Calculate how close to the reference point each element is
+    const mapped = elements.map(element => {
+      const offset = utils.scrollOffset(container, element, horizontal);
+      const deltaStart = horizontal ? currentPosition.left - offset : currentPosition.top - offset;
+      const deltaEnd = horizontal ? currentPosition.left - (offset + element.offsetWidth) : currentPosition.top - (offset + element.offsetHeight);
+      const delta = Math.sign(deltaStart) !== Math.sign(deltaEnd) ? 0 : Math.min(Math.abs(deltaStart), Math.abs(deltaEnd));
+      return { element, offset, delta };
+    });
+
+    //Select the closest element by sorting
+    mapped.sort((a,b) => a.delta - b.delta);
+    return mapped[0]?.element;
   }
 
   setActiveLink(link: string | undefined) {
@@ -103,7 +127,7 @@ export class Scroller {
         events.registered['begin'](to, target);
       }
 
-      if (isDocument(containerElement)) {
+      if (utils.isDocument(containerElement)) {
         if (props.horizontal) {
           window.scrollTo(scrollOffset, 0);
         } else {

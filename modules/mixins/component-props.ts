@@ -53,11 +53,6 @@ export interface ReactScrollProps {
   delay?: number;
 
   /**
-   * 	In case the distance has to be recalculated - if you have content that expands etc.
-   */
-  isDynamic?: boolean;
-  
-  /**
    * Invoked whenever link is clicked
    */
   onClick?: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
@@ -99,7 +94,7 @@ export interface ReactScrollProps {
   spyThrottle?: number;
 
   /**
-   * Whether link should remain active until another link becomes active (true) or immediately deactivate upon scrolling past the element (false)
+   * Whether link should stick to the closest element (true) or only activate when scrolling inside an element (false)
    */
   sticky?: boolean;
 

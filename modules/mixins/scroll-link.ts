@@ -85,38 +85,31 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
       const coords = this.getScrollCoords(element);
 
       let isInside: boolean;
-      if (horizontal) {
-        isInside = (offset >= Math.floor(coords.left) && offset < Math.floor(coords.right));
+      if (this.props.sticky) {
+        const scrollSpyContainer = this.getScrollSpyContainer();
+        isInside = scroller.getClosest(scrollSpyContainer, this.props) === element;
       } else {
-        isInside = (offset >= Math.floor(coords.top) && offset < Math.floor(coords.bottom));
+        if (horizontal) {
+          isInside = (offset >= Math.floor(coords.left) && offset < Math.floor(coords.right));
+        } else {
+          isInside = (offset >= Math.floor(coords.top) && offset < Math.floor(coords.bottom));
+        }
       }
 
       const activeLink = scroller.getActiveLink();
-
       if (!isInside) {
-        if (this.props.sticky) {
-          //Sticky behavior, don't set scroller to inactive
-          if (activeLink && to !== activeLink) {
-            //Time to change            
-            if (this.props.spy && this.state.active) {
-              this.setState({ active: false });
-              this.props.onSetInactive && this.props.onSetInactive(to, element);
-            }
-          }
-        } else {
-          if (to === activeLink) {
-            scroller.setActiveLink(void 0);
-          }
+        if (to === activeLink) {
+          scroller.setActiveLink(void 0);
+        }
 
-          if (this.props.hashSpy && scrollHash.getHash() === to) {
-            const { saveHashHistory = false } = this.props
-            scrollHash.changeHash("", saveHashHistory);
-          }
+        if (this.props.hashSpy && scrollHash.getHash() === to) {
+          const { saveHashHistory = false } = this.props
+          scrollHash.changeHash("", saveHashHistory);
+        }
 
-          if (this.props.spy && this.state.active) {
-            this.setState({ active: false });
-            this.props.onSetInactive && this.props.onSetInactive(to, element);
-          }
+        if (this.props.spy && this.state.active) {
+          this.setState({ active: false });
+          this.props.onSetInactive && this.props.onSetInactive(to, element);
         }
       }
 
@@ -133,9 +126,15 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
     }
 
     visibilityHandler = (isVisible: boolean) => {
+      const toggling = isVisible && !this.state.visible;
       this.setState({
         visible: this.props.autoHide ? isVisible : true
       });
+
+      if (toggling) {
+        //This is probably needed
+        this.spyHandler();
+      }
     }
 
     getScrollSpyContainer() {
