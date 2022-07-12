@@ -22,11 +22,13 @@ export class Scroller {
     let callbacks;
     if (this.__mapped[name]) {
       callbacks = this.__mapped[name].callbacks;
+    } else {
+      this.__mapped[name] = {
+        callbacks: []
+      }
     }
 
-    this.__mapped[name] = {
-      element, callbacks: []
-    };
+    this.__mapped[name].element = element;
 
     callbacks?.forEach(c => c(true));
   }
@@ -40,7 +42,13 @@ export class Scroller {
         callbacks: [visibilityHandler]
       };
     } else {
-      this.__mapped[name].callbacks.push(visibilityHandler);
+      const map = this.__mapped[name];
+      map.callbacks.push(visibilityHandler);
+      
+      if (map.element) {
+        //Call immediately if already registered
+        visibilityHandler(true);
+      }
     }
   }
 
@@ -56,7 +64,7 @@ export class Scroller {
       this.__mapped[name].callbacks.forEach(c => c(false));
     }
 
-    delete this.__mapped[name];
+    delete this.__mapped[name].element;
   }
 
   get(name: string) : HTMLElement | undefined {
