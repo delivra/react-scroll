@@ -99,6 +99,15 @@ export interface ReactScrollProps {
   sticky?: boolean;
 
   /**
+   * Which part of the container's viewport must be inside a scroll element to consider it active.
+   * Start: (default) The top/left
+   * Middle: The center/middle
+   * End: The bottom/right
+   * Sliding: "Start" when all the way to the top/left, "End" when all the way to the bottom/right, and slides in between
+   */
+  referencePoint?: "Start" | "Middle" | "End" | "Sliding";
+
+  /**
    * Whether link should automatically hide itself is the target element isn't available
    */
   autoHide?: boolean;

@@ -68,12 +68,16 @@ export class Scroller {
 
     const { horizontal = false } = props;
     const currentPosition = utils.currentPosition(container);
+    
+    //The reference point within the container to detect for collision
+    const referencePercent = this.getReferencePoint(props, currentPosition);
+    const referenceOffset = horizontal ? (currentPosition.left + referencePercent * currentPosition.width) : (currentPosition.top + referencePercent * currentPosition.height);
 
     //Calculate how close to the reference point each element is
     const mapped = elements.map(element => {
       const offset = utils.scrollOffset(container, element, horizontal);
-      const deltaStart = horizontal ? currentPosition.left - offset : currentPosition.top - offset;
-      const deltaEnd = horizontal ? currentPosition.left - (offset + element.offsetWidth) : currentPosition.top - (offset + element.offsetHeight);
+      const deltaStart = referenceOffset - offset;
+      const deltaEnd = horizontal ? referenceOffset - (offset + element.offsetWidth) : referenceOffset - (offset + element.offsetHeight);
       const delta = Math.sign(deltaStart) !== Math.sign(deltaEnd) ? 0 : Math.min(Math.abs(deltaStart), Math.abs(deltaEnd));
       return { element, offset, delta };
     });
@@ -81,6 +85,38 @@ export class Scroller {
     //Select the closest element by sorting
     mapped.sort((a,b) => a.delta - b.delta);
     return mapped[0]?.element;
+  }
+
+  private getReferencePoint(props: ReactScrollProps, currentPosition: { left: number; top: number; height: number; width: number; totalHeight: number; totalWidth: number; }) {
+    const { horizontal = false, referencePoint } = props;
+    switch (referencePoint) {
+      case "Start":
+        //Top/Left
+        return 0;
+      case "Middle":
+        return 0.5;
+      case "End":
+        //Bottom/Right
+        return 1;      
+      case "Sliding":
+        //Calculate the percentage that the container has been scrolled, and change the reference point based on that
+        if (horizontal) {
+            const isScrollable = Math.abs(currentPosition.totalWidth - currentPosition.width) > 1;
+            if (!isScrollable)
+              return 0;
+
+            return currentPosition.left / (currentPosition.totalWidth - currentPosition.width);
+        } else {
+            const isScrollable = Math.abs(currentPosition.totalHeight - currentPosition.height) > 1;
+            if (!isScrollable)
+              return 0;
+
+            return currentPosition.top / (currentPosition.totalHeight - currentPosition.height);
+        }
+      default:
+        //Default to 'Start'
+        return 0;
+    }
   }
 
   setActiveLink(link: string | undefined) {
@@ -117,7 +153,23 @@ export class Scroller {
 
     props.absolute = true;
 
-    const scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset;
+    let scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset;
+    const containerPosition = utils.currentPosition(containerElement);
+
+    //Override position to calculate based on the element position rather than scroll position
+    const referencePercent = this.getReferencePoint(props, {
+      ...containerPosition, 
+      left: scrollOffset,
+      top: scrollOffset,
+      height: 0,
+      width: 0
+    });
+
+    if (referencePercent > 0) {
+      //Correct the scrolloffset to put the viewport at the correct referencePoint
+      scrollOffset -= referencePercent * containerPosition.height;
+      scrollOffset += referencePercent * target.clientHeight;
+    }
 
     /*
      * if animate is not provided just scroll into the view
