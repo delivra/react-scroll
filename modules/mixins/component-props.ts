@@ -112,16 +112,3 @@ export interface ReactScrollProps {
    */
   autoHide?: boolean;
 }
-
-export type ReactScrollLinkProps = {  
-  className?: string;
-  children?: React.ReactNode;
-  onClick: React.MouseEventHandler<HTMLElement>;
-};
-
-export type ReactScrollElementProps = {
-  children?: React.ReactNode;
-  parentBindings: {
-    domNode?: HTMLElement;
-  }
-} & React.HTMLProps<HTMLDivElement>;

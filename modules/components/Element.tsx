@@ -1,22 +1,21 @@
 "use strict";
-
 import * as React from 'react';
-import { ReactScrollElementProps } from '../mixins/component-props';
-import ScrollElement from '../mixins/scroll-element';
+import ScrollElement, { ReactScrollElementInnerProps } from '../mixins/scroll-element';
 
-class ElementWrapper extends React.Component<ReactScrollElementProps>{
+class ElementWrapper extends React.Component<ReactScrollElementInnerProps & React.HTMLAttributes<HTMLDivElement>>{
   render() {
     // Remove `parentBindings` from props
-    let newProps: Partial<ReactScrollElementProps> = {...this.props};
-    if (newProps.parentBindings) {
-      delete newProps.parentBindings;
-    }
+    const {parentBindings, children, ...divProps}  = {...this.props};
 
     return (
-      <div {...newProps} ref={(el: HTMLDivElement) => { this.props.parentBindings.domNode = el; }}>
-        {this.props.children}
+      <div {...divProps} ref={this.setDomNode}>
+        {children}
       </div>
     );
+  }
+
+  setDomNode = (el: HTMLDivElement) => {
+    this.props.parentBindings.domNode = el
   }
 };
 

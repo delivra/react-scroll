@@ -1,17 +1,20 @@
 import * as React from 'react';
-import { ReactScrollElementProps } from './component-props';
 import scroller from './scroller';
 
-type ComponentProps = {
+export type ReactScrollElementProps = {
   name: string;
-  id?:   string;
-  children?: React.ReactNode;
 };
 
-export default (Component:React.ComponentType<ReactScrollElementProps>) => {
-  class Element extends React.Component<ComponentProps> {
+export type ReactScrollElementInnerProps = ReactScrollElementProps & {
+  parentBindings: {
+    domNode?: HTMLElement;
+  };
+};
+
+export default <T extends HTMLElement>(Component: React.ComponentType<ReactScrollElementInnerProps & React.HTMLAttributes<T>>) => {
+  class Element extends React.Component<ReactScrollElementProps & React.HTMLAttributes<T>> {
     childBindings = {
-      domNode: undefined as HTMLElement | undefined
+      domNode: undefined as T | undefined
     }
     
     componentDidMount() {
@@ -21,7 +24,7 @@ export default (Component:React.ComponentType<ReactScrollElementProps>) => {
       this.registerElems(this.props.name);
     }
 
-    componentDidUpdate(prevProps: ComponentProps) {
+    componentDidUpdate(prevProps: ReactScrollElementProps & React.HTMLAttributes<T>) {
       if (this.props.name !== prevProps.name) {
         this.registerElems(this.props.name);
       }
@@ -39,7 +42,7 @@ export default (Component:React.ComponentType<ReactScrollElementProps>) => {
     }
     
     render() {
-      const props: ReactScrollElementProps = {
+      const props = {
         ...this.props,
         parentBindings: this.childBindings
       };

@@ -3,7 +3,7 @@ import * as React from 'react';
 import scrollSpy from './scroll-spy';
 import defaultScroller, { Scroller } from './scroller';
 import scrollHash from './scroll-hash';
-import { ReactScrollLinkProps, ReactScrollProps } from './component-props';
+import { ReactScrollProps } from './component-props';
 import { isDocument } from './utils';
 
 type LinkState = {
@@ -12,7 +12,7 @@ type LinkState = {
   container: HTMLElement | Document | undefined
 };
 
-export default (Component: React.ComponentType<ReactScrollLinkProps>, customScroller: Scroller) => {
+export default <T extends HTMLElement>(Component: React.ComponentType<React.HTMLAttributes<T>>, customScroller: Scroller) => {
   const scroller = customScroller || defaultScroller;
 
   class Link extends React.PureComponent<ReactScrollProps, LinkState> {
@@ -193,7 +193,7 @@ export default (Component: React.ComponentType<ReactScrollLinkProps>, customScro
         className = this.props.className ?? '';
       }
 
-      const props : ReactScrollLinkProps = {
+      const props = {
         className: className,
         onClick: this.handleClick,
         children: this.props.children
