@@ -1,10 +1,10 @@
 import * as React from 'react';
 
-import scrollSpy from './scroll-spy';
-import defaultScroller, { Scroller } from './scroller';
-import scrollHash from './scroll-hash';
-import { ReactScrollProps } from './component-props';
-import { isDocument } from './utils';
+import scrollSpy from '../mixins/scroll-spy';
+import defaultScroller, { Scroller } from '../mixins/scroller';
+import scrollHash from '../mixins/scroll-hash';
+import { ReactScrollProps } from '../mixins/component-props';
+import { isDocument } from '../mixins/utils';
 
 type LinkState = {
   active: boolean,
@@ -23,7 +23,14 @@ export default <T extends HTMLElement>(Component: React.ComponentType<React.HTML
     }
 
     scrollTo = (to: string, props: ReactScrollProps) => {
-      scroller.scrollTo(to, {...this.state, ...props});
+      setTimeout(() => {
+        scroller.scrollTo(to, { ...this.state, ...props });		
+		
+        if (this.props.onClick) {
+          //Fire once extra for good measure
+          scrollSpy.update();
+        }
+      }, 1);
     }
 
     handleClick = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {

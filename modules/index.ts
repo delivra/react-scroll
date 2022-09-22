@@ -1,13 +1,9 @@
-import  Link   from './components/Link';
-import  Button   from './components/Button';
-import  Element  from './components/Element';
-import  scroller  from './mixins/scroller';
-import  Events  from './mixins/scroll-events';
-import  scrollSpy  from './mixins/scroll-spy';
-import  animateScroll  from './mixins/animate-scroll';
-import  ScrollLink  from './mixins/scroll-link';
-import  ScrollElement  from './mixins/scroll-element';
-
-export { Link, Button, Element, scroller, Events, scrollSpy, animateScroll, ScrollLink, ScrollElement }
-
-export default { Link, Button, Element, scroller, Events, scrollSpy, animateScroll, ScrollLink, ScrollElement }
+export { default as Link } from './components/Link';
+export { default as Button } from './components/Button';
+export { default as Element } from './components/Element';
+export { default as scroller } from './mixins/scroller';
+export { default as Events } from './mixins/scroll-events';
+export { default as scrollSpy } from './mixins/scroll-spy';
+export { default as animateScroll } from './mixins/animate-scroll';
+export { default as withScrollLink } from './components/withScrollLink';
+export { default as withScrollElement } from './components/withScrollElement';

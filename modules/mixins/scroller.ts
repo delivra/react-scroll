@@ -10,6 +10,16 @@ type ScrollMapping = {
   callbacks: VisibilityCallback[];
 };
 
+/** Check if the given element is currently visible */
+function isVisible(elem?: HTMLElement) {
+  if (!elem) {
+    return false;
+  }
+
+  //Stolen from jQuery
+  return !!( elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length );
+}
+
 export class Scroller {
   __mapped: Record<string, ScrollMapping> = {}
   __activeLink: string | undefined
@@ -72,7 +82,7 @@ export class Scroller {
   }
 
   getClosest(container: HTMLElement | Document, props: ReactScrollProps) : HTMLElement | undefined {
-    const elements = Object.values(this.__mapped).map(m => m.element).filter(Boolean) as HTMLElement[];
+    const elements = Object.values(this.__mapped).map(m => m.element).filter(isVisible) as HTMLElement[];
 
     const { horizontal = false } = props;
     const currentPosition = utils.currentPosition(container);

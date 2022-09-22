@@ -1,5 +1,5 @@
 import * as React from 'react';
-import scroller from './scroller';
+import scroller from '../mixins/scroller';
 
 export type ReactScrollElementProps = {
   name: string;

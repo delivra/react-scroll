@@ -1,7 +1,7 @@
 "use strict";
 
 import * as React from 'react';
-import ScrollLink from '../mixins/scroll-link';
+import withScrollLink from './withScrollLink';
 import scroller from '../mixins/scroller';
 
 class LinkElement extends React.Component<React.HTMLAttributes<HTMLAnchorElement>> {
@@ -12,4 +12,4 @@ class LinkElement extends React.Component<React.HTMLAttributes<HTMLAnchorElement
   }
 };
 
-export default ScrollLink(LinkElement, scroller)
+export default withScrollLink(LinkElement, scroller)

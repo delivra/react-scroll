@@ -1,6 +1,6 @@
 "use strict";
 import * as React from 'react';
-import ScrollElement, { ReactScrollElementInnerProps } from '../mixins/scroll-element';
+import withScrollElement, { ReactScrollElementInnerProps } from './withScrollElement';
 
 class ElementWrapper extends React.Component<ReactScrollElementInnerProps & React.HTMLAttributes<HTMLDivElement>>{
   render() {
@@ -19,4 +19,4 @@ class ElementWrapper extends React.Component<ReactScrollElementInnerProps & Reac
   }
 };
 
-export default ScrollElement(ElementWrapper);
+export default withScrollElement(ElementWrapper);
