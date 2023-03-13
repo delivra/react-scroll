@@ -172,22 +172,6 @@ export class Scroller {
     props.absolute = true;
     const pageTitleWrapperHeight = 105;
     let scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset - pageTitleWrapperHeight;
-    /* const containerPosition = utils.currentPosition(containerElement);
-
-    //Override position to calculate based on the element position rather than scroll position
-    const referencePercent = this.getReferencePoint(props, {
-      ...containerPosition, 
-      left: scrollOffset,
-      top: scrollOffset,
-      height: 0,
-      width: 0
-    });
-
-    if (referencePercent > 0) {
-      //Correct the scrolloffset to put the viewport at the correct referencePoint
-      scrollOffset -= referencePercent * containerPosition.height;
-      scrollOffset += referencePercent * target.clientHeight;
-    } */
 
     /*
      * if animate is not provided just scroll into the view
