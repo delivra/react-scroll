@@ -95,7 +95,7 @@ export class Scroller {
     const mapped = elements.map(element => {
       const offset = utils.scrollOffset(container, element, horizontal);
       const deltaStart = referenceOffset - offset;
-      const deltaEnd = horizontal ? referenceOffset - (offset + element.offsetWidth) : referenceOffset - (offset + element.offsetHeight);
+      const deltaEnd = referenceOffset - offset;
       const delta = Math.sign(deltaStart) !== Math.sign(deltaEnd) ? 0 : Math.min(Math.abs(deltaStart), Math.abs(deltaEnd));
       return { element, offset, delta };
     });
@@ -170,9 +170,9 @@ export class Scroller {
     }
 
     props.absolute = true;
-
-    let scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset;
-    const containerPosition = utils.currentPosition(containerElement);
+    const pageTitleWrapperHeight = 105;
+    let scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset - pageTitleWrapperHeight;
+    /* const containerPosition = utils.currentPosition(containerElement);
 
     //Override position to calculate based on the element position rather than scroll position
     const referencePercent = this.getReferencePoint(props, {
@@ -187,7 +187,7 @@ export class Scroller {
       //Correct the scrolloffset to put the viewport at the correct referencePoint
       scrollOffset -= referencePercent * containerPosition.height;
       scrollOffset += referencePercent * target.clientHeight;
-    }
+    } */
 
     /*
      * if animate is not provided just scroll into the view
