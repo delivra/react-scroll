@@ -170,8 +170,7 @@ export class Scroller {
     }
 
     props.absolute = true;
-    const pageTitleWrapperHeight = 105;
-    let scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset - pageTitleWrapperHeight;
+    let scrollOffset = utils.scrollOffset(containerElement, target, horizontal) + offset;
 
     /*
      * if animate is not provided just scroll into the view
